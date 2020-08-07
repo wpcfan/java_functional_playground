@@ -39,7 +39,6 @@ public class BasicOperatorTests {
 
     @Test
     public void givenUsers_whenForEach_thenChangeGenderUsingStream() {
-        // forEach 顺序不确定
         userList.stream().forEach(user -> user.setEnabled(true));
         assertTrue(userList.get(1).isEnabled());
     }
@@ -94,30 +93,6 @@ public class BasicOperatorTests {
     }
 
     @Test
-    public void givenUsers_whenFilterUsername_thenGetCount() {
-        long count = 0L;
-        for (User user : userList) {
-            if (user.getMobile().startsWith("130")) {
-                count++;
-            }
-        }
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void givenUsers_whenFilterUsername_thenGetCountUsingStream() {
-        val count = userList.stream()
-                .filter(user -> user.getMobile().startsWith("130"))
-                .count();
-        assertEquals(2, count);
-        Predicate<User> userMobileStartWith130 = (user) -> user.getMobile().startsWith("130");
-        val countWithPredicate = userList.stream()
-                .filter(userMobileStartWith130)
-                .count();
-        assertEquals(2, countWithPredicate);
-    }
-
-    @Test
     public void givenUsers_withAnyMatch_thenReturnTrue() {
         boolean existed = false;
         for (User user : userList) {
@@ -142,13 +117,6 @@ public class BasicOperatorTests {
         val existed = userList.stream()
                 .anyMatch(user -> user.getMobile().startsWith("130"));
         assertTrue(existed);
-        val nonExisted = userList.stream()
-                .anyMatch(user -> user.getMobile().startsWith("132"));
-        assertFalse(nonExisted);
-        Predicate<User> userMobileStartWith130 = (user) -> user.getMobile().startsWith("130");
-        val existedWithPredicate = userList.stream()
-                .anyMatch(userMobileStartWith130);
-        assertTrue(existedWithPredicate);
     }
 
     @Test
@@ -193,7 +161,7 @@ public class BasicOperatorTests {
 
     @Test
     public void givenUsers_withMap_thenTransformUsingStream() {
-        List<UserDTO> userDTOS = userList.stream()
+        List<String> userDTOS = userList.stream()
                 .map(user -> UserDTO.builder()
                         .username(user.getUsername())
                         .name(user.getName())
@@ -201,8 +169,33 @@ public class BasicOperatorTests {
                         .mobile(user.getMobile())
                         .build()
                 )
+                .map(UserDTO::getMobile)
                 .collect(toList());
         assertEquals(3, userDTOS.size());
+    }
+
+    @Test
+    public void givenUsers_whenFilterUsername_thenGetCount() {
+        long count = 0L;
+        for (User user : userList) {
+            if (user.getMobile().startsWith("130")) {
+                count++;
+            }
+        }
+        assertEquals(2, count);
+    }
+
+    @Test
+    public void givenUsers_whenFilterUsername_thenGetCountUsingStream() {
+        val count = userList.stream()
+                .filter(user -> user.getMobile().startsWith("130"))
+                .count();
+        assertEquals(2, count);
+        Predicate<User> userMobileStartWith130 = (user) -> user.getMobile().startsWith("130");
+        val countWithPredicate = userList.stream()
+                .filter(userMobileStartWith130)
+                .count();
+        assertEquals(2, countWithPredicate);
     }
 
     @Test

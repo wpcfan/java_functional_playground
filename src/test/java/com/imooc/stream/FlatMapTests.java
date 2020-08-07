@@ -1,6 +1,9 @@
 package com.imooc.stream;
 
 import com.imooc.stream.domain.User;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,16 +108,32 @@ public class FlatMapTests {
         long count = userList.stream()
                 .map(user -> ThirdPartyApi.findByUsername(user.getUsername()))
                 .flatMap(Optional::stream)
-                .peek(user -> log.debug("user: {}", user))
+                .peek(profile -> log.debug("profile: {}", profile))
                 .count();
         assertEquals(2, count);
     }
 
+    @Test
+    public void givenUsers_withOptional_thenDealElseWithStream() {
+        String greeting = ThirdPartyApi.findByUsername("zhangsan")
+                .map(Profile::getGreeting)
+                .orElse("未知用户");
+        assertEquals("未知用户", greeting);
+    }
+
     static class ThirdPartyApi {
-        static Optional<User> findByUsername(String username) {
+        static Optional<Profile> findByUsername(String username) {
             return Arrays.stream(arrayOfUsers)
                     .filter(user -> !"zhangsan".equals(username) && user.getUsername().equals(username))
-                    .findAny();
+                    .findAny()
+                    .map(user -> new Profile(user.getUsername(), "Hello, " + user.getName()));
         }
+    }
+
+    @AllArgsConstructor
+    @Data
+    static class Profile {
+        private String username;
+        private String greeting;
     }
 }

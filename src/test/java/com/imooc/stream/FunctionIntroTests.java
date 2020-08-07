@@ -34,7 +34,7 @@ public class FunctionIntroTests {
         String authorB = "李四";
         String authorC = "王五";
         String authorD = "前朝太监";
-        List<Book> books = new ArrayList<>(Arrays.asList(
+        List<Book> books = Arrays.asList(
                 new Book("C++编程", authorA, 1216),
                 new Book("C#编程", authorA, 365),
                 new Book("Java编程", authorB, 223),
@@ -43,7 +43,7 @@ public class FunctionIntroTests {
                 new Book("21天精通Go", authorC, 352),
                 new Book("葵花宝典", authorD, 1200),
                 new Book("编程圣经", authorA, 320)
-        ));
+        );
         List<Book> booksFiltered = new ArrayList<>();
         for (Book book : books){
             if (! "葵花宝典".equals(book.getTitle())) {
@@ -90,9 +90,9 @@ public class FunctionIntroTests {
     public void givenTwoPredicates_thenComposeThemUsingOr() {
         Predicate<String> startsWithA = (text) -> text.startsWith("A");
         Predicate<String> endsWithX   = (text) -> text.endsWith("x");
-        Predicate<String> startsWithAAndEndsWithX = startsWithA.or(endsWithX);
-        String  input  = "A man is standing there with a box";
-        assertTrue(startsWithAAndEndsWithX.test(input));
+        Predicate<String> startsWithOrEndsWithX = startsWithA.or(endsWithX);
+        String  input  = "A man";
+        assertTrue(startsWithOrEndsWithX.test(input));
     }
 
     @Test
@@ -139,6 +139,14 @@ public class FunctionIntroTests {
 
     interface IConfigurator<T> {
         void configure(T t);
+    }
+
+    class TestProducer implements IProducer {
+
+        @Override
+        public Object produce() {
+            return null;
+        }
     }
 
     static class HigherOrderFunctionClass {

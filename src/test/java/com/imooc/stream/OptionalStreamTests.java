@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,13 +22,19 @@ public class OptionalStreamTests {
             User.builder().id(3L).username("wangwu").name("王五").enabled(true).mobile("13100000000").build(),
     };
 
-    private List<User> userList;
     private MockRepo repo;
 
     @BeforeEach
     void setup() {
-        userList = Arrays.asList(arrayOfUsers);
         repo = new MockRepo();
+    }
+
+    static class MockRepo {
+        Optional<User> findByUsername(String username) {
+            return Arrays.stream(arrayOfUsers)
+                    .filter(user -> user.getUsername().equals(username))
+                    .findAny();
+        }
     }
 
     @Test
@@ -76,22 +81,22 @@ public class OptionalStreamTests {
 
     @Test
     public void givenUsers_whenQuerying_thenIfPresent() {
-        repo.findByUsername("zhansan")
+        repo.findByUsername("zhangsan")
                 .map(User::getUsername)
                 .ifPresent(username -> {
                     log.debug("username: {}", username);
-                    assertEquals("zhansan", username);
+                    assertEquals("zhangsan", username);
                 });
     }
 
     @Test
     public void givenUsers_whenQuerying_thenIfPresentOrElse() {
-        repo.findByUsername("zhansan")
+        repo.findByUsername("zhangsan")
                 .map(User::getUsername)
                 .ifPresentOrElse(
                         username -> {
                             log.debug("username: {}", username);
-                            assertEquals("zhansan", username);
+                            assertEquals("zhangsan", username);
                         },
                         () -> {
                             log.debug("cannot reach else block");
@@ -105,11 +110,5 @@ public class OptionalStreamTests {
                         () -> {
                             assertTrue(true);
                         });
-    }
-
-    static class MockRepo {
-        Optional<User> findByUsername(String username) {
-            return Arrays.stream(arrayOfUsers).filter(user -> user.getUsername().equals(username)).findAny();
-        }
     }
 }

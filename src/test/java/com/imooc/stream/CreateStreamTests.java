@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 public class CreateStreamTests {
+
     private static final User[] arrayOfUsers = {
             User.builder().id(1L).username("zhangsan").name("张三").enabled(true).mobile("13000000001").build(),
             User.builder().id(2L).username("lisi").name("李四").enabled(false).mobile("13000000002").build(),
@@ -36,7 +37,7 @@ public class CreateStreamTests {
     @Test
     public void givenUsers_createStreamWithArray() {
         val list = Arrays.stream(arrayOfUsers)
-                .peek(user -> log.debug("user: {}", user.getUsername()))
+                .peek(user -> log.debug("user: {}", user))
                 .collect(toList());
         assertEquals(arrayOfUsers.length, list.size());
     }
@@ -44,7 +45,7 @@ public class CreateStreamTests {
     @Test
     public void givenUsers_createStreamWithList() {
         val list = userList.stream()
-                .peek(user -> log.debug("user: {}", user.getUsername()))
+                .peek(user -> log.debug("user: {}", user))
                 .collect(toList());
         assertEquals(userList.size(), list.size());
     }
@@ -88,11 +89,11 @@ public class CreateStreamTests {
 
     @Test
     public void givenIntegerRange_createStreamWithIntStream() {
-        val list = IntStream.range(0,5)
+        val list = IntStream.rangeClosed(0, 5)
                 .boxed()
                 .peek(i -> log.debug("the number is {}", i))
                 .collect(toList());
-        assertEquals(5, list.size());
+        assertEquals(6, list.size());
     }
 
     @Test

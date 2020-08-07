@@ -42,17 +42,9 @@ public class CollectorsTests {
     }
 
     @Test
-    public void givenUsers_withJoining_thenGetString() {
-        Map<String, String>  requestParams = Map.of(
-                "name", "张三",
-                "username", "zhangsan",
-                "email", "zhangsan@local.dev"
-        );
-        val url = requestParams.keySet().stream()
-                .map(key -> key + "=" + requestParams.get(key))
-                .sorted()
-                .collect(Collectors.joining("&", "http://local.dev/api" + "?", ""));
-        assertEquals("http://local.dev/api?email=zhangsan@local.dev&name=张三&username=zhangsan", url);
+    public void givenUsers_withToSet_thenSuccess() {
+        Set<User> set = userList.stream().collect(toSet());
+        assertEquals(3, set.size());
     }
 
     @Test
@@ -80,17 +72,28 @@ public class CollectorsTests {
     }
 
     @Test
-    public void givenUsers_withToSet_thenSuccess() {
-        Set<User> set = userList.stream().collect(toSet());
-        assertEquals(3, set.size());
-    }
-
-    @Test
     public void givenUsers_withToCollection_thenSuccess() {
         Comparator<User> byAge = Comparator.comparingInt(User::getAge);
 //        Supplier<TreeSet<User>> userSupplier = () -> new TreeSet<>(byAge);
         TreeSet<User> setByAge = userList.stream().collect(toCollection(() -> new TreeSet<>(byAge)));
         assertEquals(30, setByAge.stream().findFirst().map(User::getAge).orElse(-1));
+    }
+
+    @Test
+    public void givenUsers_withJoining_thenGetString() {
+        Map<String, String>  requestParams = Map.of(
+                "name", "张三",
+                "username", "zhangsan",
+                "email", "zhangsan@local.dev"
+        );
+        val url = requestParams.keySet().stream()
+                .map(key -> key + "=" + requestParams.get(key))
+                .sorted()
+                .collect(Collectors.joining(
+                        "&",
+                        "http://local.dev/api" + "?",
+                        ""));
+        assertEquals("http://local.dev/api?email=zhangsan@local.dev&name=张三&username=zhangsan", url);
     }
 
     @Test

@@ -35,6 +35,7 @@ public class ParallelStreamTests {
 
     public static boolean isPrime(int number) {
         if (number <= 1) return false;
-        return !IntStream.rangeClosed(2, number / 2).anyMatch(i -> number % i == 0);
+        return !IntStream.rangeClosed(2, number / 2)
+                    .anyMatch(i -> number % i == 0);
     }
 }
