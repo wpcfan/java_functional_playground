@@ -35,7 +35,9 @@ public class ReduceTests {
         Integer sumByReduce = userList
                 .stream()
                 .map(User::getAge)
-                .reduce(0, (Integer acc, Integer curr) -> Integer.sum(acc, curr));
+                .reduce(0, (Integer acc, Integer curr) -> {
+                    return acc + curr;
+                });
         assertEquals(103, sumByReduce);
         // collect 仅可以使用可变的容器
         MutableInt sumByCollect = userList.stream().collect(
@@ -59,14 +61,16 @@ public class ReduceTests {
     @Test
     public void givenTwoNumber_withReduce_thenSumSuccess() {
         List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        int sum = numbers.stream().reduce(0, (a, b) -> a + b);
+        int sum = numbers.stream().reduce(0, (acc, curr) -> acc + curr);
         assertEquals(45, sum);
     }
 
     @Test
     public void givenUsers_thenReduceToMaxId() {
         Optional<User> userOptional = userList.stream()
-                .reduce((acc, curr) -> acc.getId() > curr.getId() ? acc : curr);
+                .reduce((acc, curr) -> {
+                    return acc.getId() > curr.getId() ? acc : curr;
+                });
         assertTrue(userOptional.isPresent());
         assertEquals(3L, userOptional.get().getId());
     }
@@ -82,16 +86,21 @@ public class ReduceTests {
     public void givenUsers_thenReduceToList() {
         List<User> list = userList.parallelStream().reduce(
                 Collections.emptyList(),
-                (acc, curr) -> Stream.concat(
-                        acc.stream(),
-                        Stream.of(curr)
-                ).collect(toList()),
+                (acc, curr) -> {
+                    List<User> newAcc= new ArrayList<>();
+                    newAcc.addAll(acc);
+                    newAcc.add(curr);
+                    return newAcc;
+                },
                 // combiner 这个函数的作用主要是考虑并行流
                 // 并行流的情况下，一个流会分成多个分片进行处理
                 // 每一个分片会产生一个临时的中间结果
                 // combiner 的作用是把这些中间结果再合并成一个最终结果
                 (left, right) -> {
-                    return Stream.concat(left.stream(), right.stream()).collect(toList());
+                    List<User> merged= new ArrayList<>();
+                    merged.addAll(left);
+                    merged.addAll(right);
+                    return merged;
                 }
         );
         assertEquals(3, list.size());
