@@ -7,18 +7,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
-import java.time.DayOfWeek;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
@@ -130,17 +124,17 @@ public class CollectorsTests {
     public void givenStrings_thenMappingAndFiltering_theChainThemTogether() {
         List<String> strings = List.of("bb", "ddd", "cc", "a");
         Map<Integer, TreeSet<String>> result = strings.stream()
-                .collect(
-                        groupingBy(String::length,
-                                mapping(String::toUpperCase,
-                                        filtering(
-                                                s -> s.length() > 1,
-                                                toCollection(TreeSet::new)
-                                        )
+                .collect(groupingBy(
+                        String::length,
+                        mapping(
+                                String::toUpperCase,
+                                filtering(
+                                        s -> s.length() > 1,
+                                        toCollection(TreeSet::new)
                                 )
                         )
-                );
-        log.debug("result {}", result);
+                ));
+        log.debug("result: {}", result);
     }
 
     @Test
@@ -172,48 +166,38 @@ public class CollectorsTests {
         val url = requestParams.keySet().stream()
                 .map(key -> key + "=" + requestParams.get(key))
                 .sorted()
-                .collect(Collectors.joining(
+                .collect(joining(
                         "&",
-                        "http://local.dev/api" + "?",
-                        ""));
+                        "http://local.dev/api?",
+                        ""
+                ));
         assertEquals("http://local.dev/api?email=zhangsan@local.dev&name=张三&username=zhangsan", url);
     }
 
     @Test
     public void customCollector_whenUsingCollectorOf_then() {
         val map = userList.stream().collect(Collector.of(
-                buildSupplier(),
-                buildBiConsumer(),
-                buildBinaryOperator()
+                buildContainer(),
+                addElementToContainer(),
+                buildReplaceStrategyWhenDuplicate()
         ));
         assertNotNull(map.keySet().stream().findFirst());
         assertEquals("lisi", map.keySet().stream().findFirst().get());
     }
 
-    private Supplier<TreeMap<String, User>> buildSupplier() {
+    private Supplier<TreeMap<String, User>> buildContainer() {
         return (Supplier<TreeMap<String, User>>) TreeMap::new;
     }
 
-    private BiConsumer<TreeMap<String, User>, User> buildBiConsumer() {
-        return (result, user) -> result.put(user.getUsername(), user);
+    private BiConsumer<TreeMap<String, User>, User> addElementToContainer() {
+        return (container, user) -> container.put(user.getUsername(), user);
     }
 
-    private BinaryOperator<TreeMap<String, User>> buildBinaryOperator() {
+    private BinaryOperator<TreeMap<String, User>> buildReplaceStrategyWhenDuplicate() {
         return (result1, result2) -> {
             result1.putAll(result2);
             return result1;
         };
-    }
-
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    @Data
-    static class AppData implements Serializable {
-        private Long id;
-        private Long totalUsers;
-        private Long todayNewUsers;
-        private Instant createdAt;
     }
 
     @AllArgsConstructor

@@ -49,23 +49,70 @@ public class FlatMapTests {
 
     private List<User> userList;
 
+    static class ThirdPartyApi {
+        static Optional<Profile> findByUsername(String username) {
+            return Arrays.stream(arrayOfUsers)
+                    .filter(user -> !"zhangsan".equals(username) && user.getUsername().equals(username))
+                    .findAny()
+                    .map(user -> new Profile(user.getUsername(), "Hello, " + user.getName()));
+        }
+    }
+
+    @AllArgsConstructor
+    @Data
+    static class Profile {
+        private String username;
+        private String greeting;
+    }
+
     @BeforeEach
     void setup() {
         userList = Arrays.asList(arrayOfUsers);
     }
 
     @Test
-    public void givenUsersWithRoles_thenFlatMap() {
-        val roleList = userList.stream()
-                .flatMap(user -> user.getRoles().stream())
-                .peek(role -> log.debug("role: {}", role))
+    public void givenUsersWithRoles_whenParentChild_withoutFlatMap() {
+        val users = userList.stream()
+                .map(User::getRoles)
+                .peek(roles -> log.debug("roles {}", roles))
                 .collect(toList());
-        assertEquals(4, roleList.size());
-        val rolesSet = userList.stream()
+        log.debug("users: {}", users);
+    }
+
+    @Test
+    public void givenUsersWithRoles_withFlatMap() {
+        val users = userList.stream()
                 .flatMap(user -> user.getRoles().stream())
-                .peek(role -> log.debug("role: {}", role))
-                .collect(toSet());
-        assertEquals(2, rolesSet.size());
+                .peek(role -> log.debug("roles {}", role))
+                .collect(toList());
+        log.debug("users: {}", users);
+    }
+
+    @Test
+    public void givenUsers_withOptional_thenWithStream() {
+        val profiles = userList.stream()
+                .map(user -> ThirdPartyApi.findByUsername(user.getUsername()))
+                .peek(profile -> log.debug("profile: {}", profile))
+                .collect(toList());
+        log.debug("profiles: {}", profiles);
+    }
+
+    @Test
+    public void givenUsers_withOptional_thenFlatMapWithStream() {
+        val profiles = userList.stream()
+                .map(user -> ThirdPartyApi.findByUsername(user.getUsername()))
+                .flatMap(Optional::stream)
+                .peek(profile -> log.debug("profile: {}", profile))
+                .collect(toList());
+        log.debug("profiles: {}", profiles);
+    }
+
+    @Test
+    public void givenUsers_withOptional_thenDealElseWithStream() {
+        String greeting = ThirdPartyApi.findByUsername("zhangsan")
+                .map(Profile::getGreeting)
+                .orElse("未知用户");
+        assertEquals("未知用户", greeting);
     }
 
     @Test
@@ -98,41 +145,8 @@ public class FlatMapTests {
                         Pair::getFirst,
                         mapping(Pair::getSecond, toList())
                 ));
+        log.debug("usersByRole {}", usersByRole);
         assertEquals(2, usersByRole.size());
         assertEquals(2, usersByRole.get("ROLE_ADMIN").size());
-    }
-
-    @Test
-    public void givenUsers_withOptional_thenFlatMapWithStream() {
-        long count = userList.stream()
-                .map(user -> ThirdPartyApi.findByUsername(user.getUsername()))
-                .flatMap(Optional::stream)
-                .peek(profile -> log.debug("profile: {}", profile))
-                .count();
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void givenUsers_withOptional_thenDealElseWithStream() {
-        String greeting = ThirdPartyApi.findByUsername("zhangsan")
-                .map(Profile::getGreeting)
-                .orElse("未知用户");
-        assertEquals("未知用户", greeting);
-    }
-
-    static class ThirdPartyApi {
-        static Optional<Profile> findByUsername(String username) {
-            return Arrays.stream(arrayOfUsers)
-                    .filter(user -> !"zhangsan".equals(username) && user.getUsername().equals(username))
-                    .findAny()
-                    .map(user -> new Profile(user.getUsername(), "Hello, " + user.getName()));
-        }
-    }
-
-    @AllArgsConstructor
-    @Data
-    static class Profile {
-        private String username;
-        private String greeting;
     }
 }

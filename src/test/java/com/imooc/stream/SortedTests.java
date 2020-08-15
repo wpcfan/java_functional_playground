@@ -13,6 +13,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
@@ -29,23 +30,6 @@ public class SortedTests {
     @BeforeEach
     void setup() {
         userList = Arrays.asList(arrayOfUsers);
-    }
-
-    @Test
-    public void givenTwoNumber_withoutStream_thenSumSuccess() {
-        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        int sum = 0;
-        for (Integer number : numbers) {
-            sum += number;
-        }
-        assertEquals(45, sum);
-    }
-
-    @Test
-    public void givenTwoNumber_withReduce_thenSumSuccess() {
-        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        int sum = numbers.stream().reduce(0, (a, b) -> a + b);
-        assertEquals(45, sum);
     }
 
     @Test
@@ -66,33 +50,40 @@ public class SortedTests {
     @Test
     public void givenCollections_withStream_thenSort() {
         List<String> list = Arrays.asList("One", "Abc", "BCD");
-        val sortedListDefaultSortOperator = list.stream()
-                .sorted()
+        val sortedList = list.stream().sorted().collect(toList());
+        assertEquals("Abc", sortedList.get(0));
+        val sortedListByFunc = list.stream().sorted((a, b) -> {
+            return a.compareTo(b);
+        }).collect(toList());
+        assertEquals("Abc", sortedListByFunc.get(0));
+        val sortedListByMethodReference = list.stream().sorted(String::compareTo).collect(toList());
+        assertEquals("Abc", sortedListByMethodReference.get(0));
+        val sortedListByComparatorFunc = list.stream().sorted(Comparator.naturalOrder()).collect(toList());
+        assertEquals("Abc", sortedListByComparatorFunc.get(0));
+        val descSortedList = list.stream().sorted(Comparator.reverseOrder()).collect(toList());
+        assertEquals("One", descSortedList.get(0));
+        val descSortedListByFunc = list.stream().sorted((a, b) -> {
+            return b.compareTo(a);
+        }).collect(toList());
+        assertEquals("One", descSortedListByFunc.get(0));
+        val sortedUsers = userList.stream()
+                .sorted((a, b) -> a.getUsername().compareTo(b.getUsername()))
                 .collect(toList());
-        assertEquals("Abc", sortedListDefaultSortOperator.get(0));
-        val sortedListWithFunction = list.stream()
-                .sorted((a, b) -> a.compareTo(b))
-                .collect(toList());
-        assertEquals("Abc", sortedListWithFunction.get(0));
-        val sortedListWithMethodReference = list.stream()
-                .sorted(String::compareTo)
-                .collect(toList());
-        assertEquals("Abc", sortedListWithMethodReference.get(0));
-        val descSortedListWithComparator = list.stream()
-                .sorted(Comparator.reverseOrder())
-                .collect(toList());
-        assertEquals("One", descSortedListWithComparator.get(0));
-        val descSortedListWithComparatorComparing = userList.stream()
+        assertEquals("lisi", sortedUsers.get(0).getUsername());
+        val sortedUsersByComparator = userList.stream()
                 .sorted(Comparator.comparing(
                         user -> user.getUsername(),
-                        (a, b) -> a.compareTo(b))
-                )
+                        (a, b) -> a.compareTo(b)
+                ))
                 .collect(toList());
-        assertEquals("lisi", descSortedListWithComparatorComparing.get(0).getUsername());
-        Collator colZhCN = Collator.getInstance(Locale.SIMPLIFIED_CHINESE);
-        val chineseList = userList.stream()
-                .sorted(Comparator.comparing(User::getName, colZhCN))
+        assertEquals("lisi", sortedUsersByComparator.get(0).getUsername());
+        Collator sortedByZhCN = Collator.getInstance(Locale.SIMPLIFIED_CHINESE);
+        val sortedUsersByChinese = userList.stream()
+                .sorted(Comparator.comparing(
+                        User::getName,
+                        sortedByZhCN
+                ))
                 .collect(toList());
-        assertEquals("李四", chineseList.get(0).getName());
+        assertEquals("李四", sortedUsersByChinese.get(0).getName());
     }
 }

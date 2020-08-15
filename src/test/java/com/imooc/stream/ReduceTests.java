@@ -27,15 +27,6 @@ public class ReduceTests {
     }
 
     @Test
-    public void givenUsers_thenReduceToMaxId() {
-        Optional<User> userOptional = userList.stream()
-//                .filter(user -> !user.isEnabled()) 如果不足两个，是不会进入 reduce 函数的
-                .reduce((acc, curr) -> acc.getId() > curr.getId() ? acc : curr);
-        assertTrue(userOptional.isPresent());
-        assertEquals(3L, userOptional.get().getId());
-    }
-
-    @Test
     public void givenUsers_thenCompareReduceAndCollect() {
         // 设计上，reduce 应该和不可变对象一起工作。
         // 如果使用可变对象，也可以得到结果，但是不是线程安全的
@@ -50,13 +41,40 @@ public class ReduceTests {
         MutableInt sumByCollect = userList.stream().collect(
                 MutableInt::new,
                 (MutableInt container, User user) -> container.add(user.getAge()),
-                MutableInt::add);
+                MutableInt::add
+        );
         assertEquals(103, sumByCollect.getValue());
     }
 
     @Test
+    public void givenTwoNumber_withoutStream_thenSumSuccess() {
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        int sum = 0;
+        for (Integer number : numbers) {
+            sum += number;
+        }
+        assertEquals(45, sum);
+    }
+
+    @Test
+    public void givenTwoNumber_withReduce_thenSumSuccess() {
+        List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        int sum = numbers.stream().reduce(0, (a, b) -> a + b);
+        assertEquals(45, sum);
+    }
+
+    @Test
+    public void givenUsers_thenReduceToMaxId() {
+        Optional<User> userOptional = userList.stream()
+                .reduce((acc, curr) -> acc.getId() > curr.getId() ? acc : curr);
+        assertTrue(userOptional.isPresent());
+        assertEquals(3L, userOptional.get().getId());
+    }
+
+    @Test
     public void givenUsers_thenReduceToCount() {
-        Integer count = userList.stream().reduce(0, (acc, curr) -> acc + 1, Integer::sum);
+        Integer count = userList.stream()
+                .reduce(0, (acc, curr) -> acc + 1, Integer::sum);
         assertEquals(3, count);
     }
 
